@@ -1,7 +1,7 @@
 {
     "type": "module",
     "scripts": {
-        "start": "node back-end/server.js"
+        "start": "node back-end/src/server.js"
     },
     "dependencies": {
         "dotenv": "^17.2.2",
