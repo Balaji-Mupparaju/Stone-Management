@@ -1,7 +1,10 @@
 {
+    "name": "stone-management-backend",
+    "version": "1.0.0",
     "type": "module",
     "scripts": {
-        "start": "node server.js"
+        "start": "node src/server.js",
+        "dev": "node src/server.js"
     },
     "dependencies": {
         "dotenv": "^17.2.2",
