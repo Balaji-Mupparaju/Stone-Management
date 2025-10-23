@@ -3,6 +3,7 @@ import StoneData from '../models/stone.js';
 class StoneService {
   async addStone(stoneDetails) {
     try {
+      console.log("Adding stone:", stoneDetails);
       const newStone = await StoneData.create(stoneDetails);
       return newStone;
     } catch (error) {

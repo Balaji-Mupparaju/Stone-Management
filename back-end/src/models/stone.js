@@ -18,7 +18,14 @@ const stoneSchema = new mongoose.Schema({
   polishCostPerFeet: Number,
 
   // --- Stone Type Array ---
-  stoneTypes: [],
+  stoneTypes: [
+    {
+      type: { type: String, required: true },
+      feet: { type: Number, default: 0 },
+      estCost: { type: Number, default: 0 },
+      soldCost: { type: Number, default: 0 },
+    }
+  ],
 
   // --- Sold Info ---
   markerName: String,
