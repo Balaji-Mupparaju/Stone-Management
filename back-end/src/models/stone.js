@@ -1,47 +1,41 @@
 import mongoose from "mongoose";
 
 const stoneSchema = new mongoose.Schema({
-  stone_details: {
-    status: String,
-    stoneName: String,
-    boughtFrom: String,
-    estimatedFeet: Number,
-    StoneCost: Number,
-    StoneTravelCost: Number,
-  },
-  cutting_details: {
-    cuttingFeet: Number,
-    costPerFeet: Number,
-  },
-  polishing_details: {
-    polishFeet: Number,
-    costPerFeet: Number,
-  },
-  stone_type: [
-    {
-      type: String,
-      feet: Number,
-      estCost: Number,
-      soldCost: Number,
-    },
-  ],
-  stone_sold: {
-    markerName: String,
-    phoneNo: Number,
-  },
+  // --- Stone Details ---
+  status: String,
+  stoneName: String,
+  boughtFrom: String,
+  estimatedFeet: Number,
+  stoneCost: Number,
+  stoneTravelCost: Number,
+
+  // --- Cutting Details ---
+  cuttingFeet: Number,
+  cuttingCostPerFeet: Number,
+
+  // --- Polishing Details ---
+  polishFeet: Number,
+  polishCostPerFeet: Number,
+
+  // --- Stone Type Array ---
+  stoneTypes: [],
+
+  // --- Sold Info ---
+  markerName: String,
+  phoneNo: Number,
 });
 
-// ✅ Virtuals for computed fields
-stoneSchema.virtual("stone_details.TotalInvestment").get(function () {
-  return (this.stone_details.StoneCost || 0) + (this.stone_details.StoneTravelCost || 0);
+// ✅ Virtuals for Computed Fields
+stoneSchema.virtual("totalInvestment").get(function () {
+  return (this.stoneCost || 0) + (this.stoneTravelCost || 0);
 });
 
-stoneSchema.virtual("cutting_details.TotalCuttingCost").get(function () {
-  return (this.cutting_details.cuttingFeet || 0) * (this.cutting_details.costPerFeet || 0);
+stoneSchema.virtual("totalCuttingCost").get(function () {
+  return (this.cuttingFeet || 0) * (this.cuttingCostPerFeet || 0);
 });
 
-stoneSchema.virtual("polishing_details.TotalPolishCost").get(function () {
-  return (this.polishing_details.polishFeet || 0) * (this.polishing_details.costPerFeet || 0);
+stoneSchema.virtual("totalPolishCost").get(function () {
+  return (this.polishFeet || 0) * (this.polishCostPerFeet || 0);
 });
 
 export default mongoose.model("StoneData", stoneSchema);
