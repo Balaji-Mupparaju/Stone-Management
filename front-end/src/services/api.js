@@ -1,4 +1,5 @@
-const API_BASE_URL = 'http://localhost:3000';
+// Default to backend port 3000 (matches backend .env). You can override with REACT_APP_API_URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
 class ApiService {
   async getAllStones() {
@@ -11,13 +12,22 @@ class ApiService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `Server error: ${response.status} - ${errorText || 'No error details available'}`
+        );
       }
 
       const data = await response.json();
+      if (!data) {
+        throw new Error('No data received from server');
+      }
       return data;
     } catch (error) {
       console.error('Error fetching stones:', error);
+      if (error.message.includes('Failed to fetch')) {
+        throw new Error('Cannot connect to server. Please check if the backend is running.');
+      }
       throw error;
     }
   }

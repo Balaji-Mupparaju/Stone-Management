@@ -1,0 +1,221 @@
+:root {
+  --primary-color: #2563eb;
+  --danger-color: #dc2626;
+  --background-color: #f8fafc;
+  --card-background: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+}
+
+.page-container {
+  padding: 2rem;
+  background-color: var(--background-color);
+  min-height: 100vh;
+}
+
+.header {
+  background-color: var(--card-background);
+  padding: 1.5rem 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.controls-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.control-button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.add-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.add-button:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.refresh-button {
+  background-color: #f1f5f9;
+  color: var(--text-primary);
+}
+
+.refresh-button:hover {
+  background-color: #e2e8f0;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: var(--danger-color);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 1280px;
+  margin: 1rem auto;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.content-container {
+  max-width: 1280px;
+  margin: 5rem auto 0;
+}
+
+.stones-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.no-stones-message {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+  grid-column: 1 / -1;
+}
+
+.stone-card {
+  background: var(--card-background);
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.stone-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.stone-content {
+  padding: 1.5rem;
+}
+
+.stone-title {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.stone-info {
+  margin: 0.75rem 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stone-info strong {
+  color: var(--text-primary);
+}
+
+.stone-type-badge {
+  background-color: #dbeafe;
+  color: #1e40af;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.card-buttons {
+  padding: 1rem 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  background-color: #f8fafc;
+  border-top: 1px solid var(--border-color);
+}
+
+.card-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  flex: 1;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.open-button {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.open-button:hover {
+  background-color: #1d4ed8;
+}
+
+.delete-button {
+  background-color: white;
+  color: var(--danger-color);
+  border: 1px solid var(--danger-color);
+}
+
+.delete-button:hover {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+
+  .stones-container {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-container {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .control-button {
+    width: 100%;
+  }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
