@@ -25,7 +25,10 @@ function EditStone() {
     phoneNo: '',
     mainType: '',
     stoneTypes: [],
+    extras: [],
   });
+
+  const [showExtras, setShowExtras] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -60,7 +63,13 @@ function EditStone() {
             estCost: t.estCost ?? 0,
             soldCost: t.soldCost ?? 0,
           })) : [],
+          extras: Array.isArray(data.extras)
+            ? data.extras.map(x => ({ amount: x.amount ?? 0, reason: x.reason || '' }))
+            : ((data.extraAmountSpent || data.extraAmountReason)
+                ? [{ amount: data.extraAmountSpent ?? 0, reason: data.extraAmountReason || '' }]
+                : []),
         });
+        setShowExtras(Array.isArray(data.extras) ? data.extras.length > 0 : false);
       } catch (e) {
         setError('Failed to load stone');
       } finally {
@@ -69,6 +78,19 @@ function EditStone() {
     };
     if (id) load();
   }, [id]);
+
+  // Keep finalFeet and soldAmount in sync with types
+  useEffect(() => {
+    const sumFeet = (formData.stoneTypes || []).reduce((sum, t) => sum + (Number(t.feet) || 0), 0);
+    const sumSold = (formData.stoneTypes || []).reduce((sum, t) => sum + (Number(t.soldCost) || 0), 0);
+    setFormData(prev => {
+      const next = { ...prev };
+      const currentFinal = Number(prev.finalFeet) || 0;
+      if (currentFinal !== sumFeet) next.finalFeet = sumFeet;
+      if ((Number(prev.soldAmount) || 0) !== sumSold) next.soldAmount = sumSold;
+      return next;
+    });
+  }, [formData.stoneTypes]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -87,16 +109,33 @@ function EditStone() {
     try {
       setSaving(true);
       setError(null);
+      const totalInvestment = (Number(formData.stoneCost || 0) + Number(formData.stoneTravelCost || 0)) || 0;
+      const totalCuttingCost = (Number(formData.cuttingFeet || 0) * Number(formData.cuttingCostPerFeet || 0)) || 0;
+      const totalPolishCost = (Number(formData.polishFeet || 0) * Number(formData.polishCostPerFeet || 0)) || 0;
+      const typesFeetSum = (formData.stoneTypes || []).reduce((sum, t) => sum + (Number(t.feet) || 0), 0);
+      const typesSoldSum = (formData.stoneTypes || []).reduce((sum, t) => sum + (Number(t.soldCost) || 0), 0);
+      const finalFeetComputed = typesFeetSum;
+
       await ApiService.updateStone(id, {
         stoneName: String(formData.stoneName).trim(),
         status: String(formData.status).trim(),
         date: formData.date ? new Date(formData.date) : null,
+        boughtFrom: String(formData.boughtFrom || '').trim(),
+        estimatedFeet: Number(formData.estimatedFeet) || 0,
+        stoneCost: Number(formData.stoneCost) || 0,
+        stoneTravelCost: Number(formData.stoneTravelCost) || 0,
         cuttingFeet: Number(formData.cuttingFeet) || 0,
         cuttingCostPerFeet: Number(formData.cuttingCostPerFeet) || 0,
         polishFeet: Number(formData.polishFeet) || 0,
         polishCostPerFeet: Number(formData.polishCostPerFeet) || 0,
-        finalFeet: Number(formData.finalFeet) || 0,
-        soldAmount: Number(formData.soldAmount) || 0,
+        totalInvestment,
+        totalCuttingCost,
+        totalPolishCost,
+        finalFeet: finalFeetComputed,
+        totalSoldAmount: typesSoldSum,
+        soldAmount: typesSoldSum,
+        extras: (formData.extras || []).map(x => ({ amount: Number(x.amount) || 0, reason: String(x.reason || '').trim() })),
+        extraAmountSpent: (formData.extras || []).reduce((s, x) => s + (Number(x.amount) || 0), 0),
         markerName: String(formData.markerName).trim(),
         phoneNo: formData.phoneNo && formData.phoneNo.length === 10 ? Number(formData.phoneNo) : 0,
         mainType: String(formData.mainType || '').trim(),
@@ -265,16 +304,6 @@ function EditStone() {
           <div className="edit-fields-card">
             <div className="edit-two-col">
               <div>
-                <div className={`form-group floating ${formData.finalFeet ? 'has-value' : ''}`}>
-                  <input type="number" name="finalFeet" value={formData.finalFeet} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Final Feet</label>
-                </div>
-                <div className={`form-group floating ${formData.soldAmount ? 'has-value' : ''}`}>
-                  <input type="number" name="soldAmount" value={formData.soldAmount} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Sold Amount (₹)</label>
-                </div>
-              </div>
-              <div>
                 <div className={`form-group floating ${formData.markerName ? 'has-value' : ''}`}>
                   <input type="text" name="markerName" value={formData.markerName} onChange={handleChange} placeholder=" " />
                   <label className="floating-label">Marker Name</label>
@@ -282,6 +311,16 @@ function EditStone() {
                 <div className={`form-group floating ${formData.phoneNo ? 'has-value' : ''}`}>
                   <input type="text" name="phoneNo" value={formData.phoneNo} onChange={handlePhoneChange} placeholder=" " maxLength="10" />
                   <label className="floating-label">Phone Number (10 digits)</label>
+                </div>
+              </div>
+              <div>
+                <div className={`form-group floating ${formData.finalFeet ? 'has-value' : ''}`}>
+                  <input type="number" name="finalFeet" value={formData.finalFeet} onChange={handleChange} min="0" placeholder=" " />
+                  <label className="floating-label">Final Feet</label>
+                </div>
+                <div className={`form-group floating ${formData.soldAmount ? 'has-value' : ''}`}>
+                  <input type="number" name="soldAmount" value={formData.soldAmount} onChange={handleChange} min="0" placeholder=" " />
+                  <label className="floating-label">Sold Amount (₹)</label>
                 </div>
               </div>
             </div>
@@ -296,8 +335,8 @@ function EditStone() {
               <div className="stone-types-header">
                 <div className="st-col-type">Type</div>
                 <div className="st-col-feet">Feet</div>
-                <div className="st-col-estd">Estd Cost</div>
-                <div className="st-col-sold">Sold Cost</div>
+                <div className="st-col-estd">Estd Price</div>
+                <div className="st-col-sold">Sold Price</div>
                 <div className="st-col-action"></div>
               </div>
               {(formData.stoneTypes || []).map((t, i) => (

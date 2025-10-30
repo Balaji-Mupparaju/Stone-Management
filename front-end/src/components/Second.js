@@ -81,6 +81,7 @@ function Second() {
             <span className="muted">Bought From: {stone.boughtFrom || 'N/A'}</span>
             <span className="muted">Est. Feet: {stone.estimatedFeet || 0}</span>
             <span className="muted">Cost: ₹{stone.stoneCost || 0}</span>
+            <span className="muted">Travel Cost: ₹{stone.stoneTravelCost || 0}</span>
           </div>
 
           <div className="grid-2">
@@ -107,7 +108,11 @@ function Second() {
                 {stone.stoneTypes.map((t, i) => (
                   <div key={i} className="type-card">
                     <div className="type-name">{t.type}</div>
-                    <div className="type-meta">{t.feet} ft • ₹{t.estCost}</div>
+                    <div className="type-meta-row">
+                      <span className="type-meta">{t.feet} ft</span>
+                      <span className="type-meta">Estd: ₹{t.estCost}</span>
+                      <span className="type-meta">Sold: ₹{t.soldCost}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -124,11 +129,12 @@ function Second() {
 
           <div className="panel">
             <h4>Summary</h4>
+            <p><strong>Total Feet:</strong> {stone.finalFeet || 0}</p>
             <p><strong>Total Investment:</strong> ₹{stone.totalInvestment || 0}</p>
-            <p><strong>Travel Cost:</strong> ₹{stone.stoneTravelCost || 0}</p>
+            <p><strong>Total Sold Price:</strong> ₹{stone.soldAmount || 0}</p>
           </div>
         </aside>
-      </div>
+      </div>  
     </div>
   );
 }

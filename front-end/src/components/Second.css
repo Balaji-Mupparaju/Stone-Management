@@ -57,6 +57,7 @@
 .type-card{background:#fff;padding:0.75rem;border-radius:0.5rem;border:1px solid #eef6ff;box-shadow:0 4px 8px rgba(2,6,23,0.02)}
 .type-card .type-name{font-weight:700}
 .type-card .type-meta{color:var(--muted);font-size:0.9rem}
+.type-meta-row{display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.25rem}
 
 .btn{background:var(--primary);color:white;padding:0.55rem 0.95rem;border-radius:0.5rem;border:none;cursor:pointer}
 .btn--ghost{background:transparent;color:var(--primary);border:1px solid rgba(37,99,235,0.12)}
