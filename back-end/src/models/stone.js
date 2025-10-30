@@ -4,10 +4,16 @@ const stoneSchema = new mongoose.Schema({
   // --- Stone Details ---
   status: String,
   stoneName: String,
+  date: Date,
   boughtFrom: String,
   estimatedFeet: Number,
+  finalFeet: Number,
   stoneCost: Number,
+  soldAmount: Number,
   stoneTravelCost: Number,
+
+  // --- Main Type Category ---
+  mainType: String,
 
   // --- Cutting Details ---
   cuttingFeet: Number,

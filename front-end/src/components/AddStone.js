@@ -5,32 +5,18 @@ import './AddStone.css';
 
 function AddStone() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    // Stone Details
+  const initialFormState = {
     stoneName: '',
     status: '',
     boughtFrom: '',
     estimatedFeet: '',
     stoneCost: '',
-    stoneTravelCost: '',
-    
-    // Cutting Details
-    cuttingFeet: '',
-    cuttingCostPerFeet: '',
-    
-    // Polishing Details
-    polishFeet: '',
-    polishCostPerFeet: '',
-    
-    // Stone Types
-    stoneTypes: [{ type: '', feet: '', estCost: '', soldCost: '' }],
-    
-    // Sold Info
-    markerName: '',
-    phoneNo: '',
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -40,30 +26,13 @@ function AddStone() {
     }));
   };
 
-  const handleStoneTypeChange = (index, field, value) => {
-    const newStoneTypes = [...formData.stoneTypes];
-    newStoneTypes[index] = {
-      ...newStoneTypes[index],
-      [field]: value
-    };
-    setFormData(prev => ({
-      ...prev,
-      stoneTypes: newStoneTypes
-    }));
-  };
+  // Stone types and additional fields removed — only core fields kept
 
-  const addStoneType = () => {
-    setFormData(prev => ({
-      ...prev,
-      stoneTypes: [...prev.stoneTypes, { type: '', feet: '', estCost: '', soldCost: '' }]
-    }));
-  };
-
-  const removeStoneType = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      stoneTypes: prev.stoneTypes.filter((_, i) => i !== index)
-    }));
+  const resetForm = () => {
+    setFormData(initialFormState);
+    setError(null);
+    setLoading(false);
+    setSuccess('');
   };
 
   const handleSubmit = async (e) => {
@@ -72,28 +41,19 @@ function AddStone() {
     setError(null);
 
     try {
+      // Only submit the core stone details the user requested
       const dataToSubmit = {
-        ...formData,
+        stoneName: String(formData.stoneName).trim(),
+        status: String(formData.status).trim(),
+        boughtFrom: String(formData.boughtFrom).trim(),
         estimatedFeet: Number(formData.estimatedFeet) || 0,
         stoneCost: Number(formData.stoneCost) || 0,
-        stoneTravelCost: Number(formData.stoneTravelCost) || 0,
-        cuttingFeet: Number(formData.cuttingFeet) || 0,
-        cuttingCostPerFeet: Number(formData.cuttingCostPerFeet) || 0,
-        polishFeet: Number(formData.polishFeet) || 0,
-        polishCostPerFeet: Number(formData.polishCostPerFeet) || 0,
-        phoneNo: formData.phoneNo ? Number(formData.phoneNo) : undefined,
-        stoneTypes: formData.stoneTypes
-          .filter(type => type.type.trim() !== '')
-          .map(type => ({
-            type: type.type,
-            feet: Number(type.feet) || 0,
-            estCost: Number(type.estCost) || 0,
-            soldCost: Number(type.soldCost) || 0
-          }))
       };
 
-      await ApiService.addStone(dataToSubmit);
-      navigate('/'); // Return to the main page after successful addition
+  await ApiService.addStone(dataToSubmit);
+  // show success briefly then navigate
+  setSuccess('Stone added successfully');
+  setTimeout(() => navigate('/'), 900);
     } catch (err) {
       setError(err.message || 'Failed to add stone. Please try again.');
       console.error('Error adding stone:', err);
@@ -106,6 +66,18 @@ function AddStone() {
     <div className="add-stone-container">
       <div className="add-stone-card">
         <h2>Add New Stone</h2>
+        <div className="card-subtitle">Quickly add a stone with minimal details</div>
+        <button
+          type="button"
+          className="back-top-button"
+          onClick={() => navigate('/')}
+          title="Back to list"
+          aria-label="Back to stone list"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
         
         {error && (
           <div className="error-message">
@@ -120,8 +92,7 @@ function AddStone() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
-            <div className="form-group">
-              <label htmlFor="stoneName">Stone Name *</label>
+            <div className={`form-group floating ${formData.stoneName ? 'has-value' : ''}`}>
               <input
                 type="text"
                 id="stoneName"
@@ -129,30 +100,51 @@ function AddStone() {
                 value={formData.stoneName}
                 onChange={handleInputChange}
                 required
-                placeholder="Enter stone name"
+                placeholder=" "
               />
-              <span className="input-icon">💎</span>
+              <label className="floating-label" htmlFor="stoneName">Stone Name *</label>
+              <span className="input-icon" aria-hidden="true"> 
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="status">Status *</label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">Select status</option>
-                <option value="Available">Available</option>
-                <option value="Sold">Sold</option>
-                <option value="Reserved">Reserved</option>
-              </select>
-              <span className="input-icon">📊</span>
+            <div className={`form-group select-group status-group ${formData.status ? 'has-value' : ''}`}>
+              <div className="status-segment" role="radiogroup" aria-label="Stone status">
+                {['Fresh Stone', 'Cutting', 'Polishing', 'Unsold', 'Sold'].map((s) => (
+                  <label
+                    key={s}
+                    className={`segment ${formData.status === s ? 'active' : ''}`}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setFormData(prev => ({ ...prev, status: s }));
+                      }
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="status"
+                      value={s}
+                      checked={formData.status === s}
+                      onChange={handleInputChange}
+                      required
+                    />
+                    <span className="segment-label">{s}</span>
+                  </label>
+                ))}
+              </div>
+              <label className={`floating-label select-label`} htmlFor="status">Status *</label>
+              <span className="input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="boughtFrom">Bought From *</label>
+            <div className={`form-group floating ${formData.boughtFrom ? 'has-value' : ''}`}>
               <input
                 type="text"
                 id="boughtFrom"
@@ -160,13 +152,18 @@ function AddStone() {
                 value={formData.boughtFrom}
                 onChange={handleInputChange}
                 required
-                placeholder="Enter supplier name"
+                placeholder=" "
               />
-              <span className="input-icon">🏪</span>
+              <label className="floating-label" htmlFor="boughtFrom">Bought From *</label>
+              <span className="input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 7h18v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M16 3l-4 4-4-4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="estimatedFeet">Estimated Feet *</label>
+            <div className={`form-group floating ${formData.estimatedFeet ? 'has-value' : ''}`}>
               <input
                 type="number"
                 id="estimatedFeet"
@@ -175,13 +172,18 @@ function AddStone() {
                 onChange={handleInputChange}
                 required
                 min="0"
-                placeholder="Enter estimated feet"
+                placeholder=" "
               />
-              <span className="input-icon">📏</span>
+              <label className="floating-label" htmlFor="estimatedFeet">Estimated Feet *</label>
+              <span className="input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 12h18" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 6v12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="stoneCost">Stone Cost (₹) *</label>
+            <div className={`form-group floating ${formData.stoneCost ? 'has-value' : ''}`}>
               <input
                 type="number"
                 id="stoneCost"
@@ -190,177 +192,31 @@ function AddStone() {
                 onChange={handleInputChange}
                 required
                 min="0"
-                placeholder="Enter stone cost"
+                placeholder=" "
               />
-              <span className="input-icon">💰</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="stoneTravelCost">Stone Travel Cost (₹)</label>
-              <input
-                type="number"
-                id="stoneTravelCost"
-                name="stoneTravelCost"
-                value={formData.stoneTravelCost}
-                onChange={handleInputChange}
-                min="0"
-                placeholder="Enter travel cost"
-              />
-              <span className="input-icon">🚛</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="cuttingFeet">Cutting Feet</label>
-              <input
-                type="number"
-                id="cuttingFeet"
-                name="cuttingFeet"
-                value={formData.cuttingFeet}
-                onChange={handleInputChange}
-                min="0"
-                placeholder="Enter cutting feet"
-              />
-              <span className="input-icon">✂️</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="cuttingCostPerFeet">Cutting Cost per Feet (₹)</label>
-              <input
-                type="number"
-                id="cuttingCostPerFeet"
-                name="cuttingCostPerFeet"
-                value={formData.cuttingCostPerFeet}
-                onChange={handleInputChange}
-                min="0"
-                placeholder="Enter cutting cost per feet"
-              />
-              <span className="input-icon">💴</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="polishFeet">Polish Feet</label>
-              <input
-                type="number"
-                id="polishFeet"
-                name="polishFeet"
-                value={formData.polishFeet}
-                onChange={handleInputChange}
-                min="0"
-                placeholder="Enter polish feet"
-              />
-              <span className="input-icon">✨</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="polishCostPerFeet">Polish Cost per Feet (₹)</label>
-              <input
-                type="number"
-                id="polishCostPerFeet"
-                name="polishCostPerFeet"
-                value={formData.polishCostPerFeet}
-                onChange={handleInputChange}
-                min="0"
-                placeholder="Enter polish cost per feet"
-              />
-              <span className="input-icon">💴</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="markerName">Marker Name</label>
-              <input
-                type="text"
-                id="markerName"
-                name="markerName"
-                value={formData.markerName}
-                onChange={handleInputChange}
-                placeholder="Enter marker name"
-              />
-              <span className="input-icon">👤</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="phoneNo">Phone Number</label>
-              <input
-                type="tel"
-                id="phoneNo"
-                name="phoneNo"
-                value={formData.phoneNo}
-                onChange={handleInputChange}
-                placeholder="Enter phone number"
-              />
-              <span className="input-icon">📱</span>
-            </div>
-
-            <div className="form-group">
-              <label>Stone Types</label>
-              <div className="stone-types-section">
-                {formData.stoneTypes.map((stoneType, index) => (
-                  <div key={index} className="stone-type-input">
-                    <div className="stone-type-fields">
-                      <input
-                        type="text"
-                        value={stoneType.type}
-                        onChange={(e) => handleStoneTypeChange(index, 'type', e.target.value)}
-                        placeholder="Enter stone type"
-                      />
-                      <input
-                        type="number"
-                        value={stoneType.feet}
-                        onChange={(e) => handleStoneTypeChange(index, 'feet', e.target.value)}
-                        placeholder="Feet"
-                      />
-                      <input
-                        type="number"
-                        value={stoneType.estCost}
-                        onChange={(e) => handleStoneTypeChange(index, 'estCost', e.target.value)}
-                        placeholder="Est. Cost"
-                      />
-                      <input
-                        type="number"
-                        value={stoneType.soldCost}
-                        onChange={(e) => handleStoneTypeChange(index, 'soldCost', e.target.value)}
-                        placeholder="Sold Cost"
-                      />
-                    </div>
-                    {formData.stoneTypes.length > 1 && (
-                      <button
-                        type="button"
-                        className="remove-type-button"
-                        onClick={() => removeStoneType(index)}
-                        title="Remove this type"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  className="add-type-button"
-                  onClick={addStoneType}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                  Add Another Type
-                </button>
-              </div>
+              <label className="floating-label" htmlFor="stoneCost">Stone Cost (₹) *</label>
+              <span className="input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 1v22" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M17 5H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
             </div>
           </div>
-
           <div className="form-actions">
             <button
               type="button"
               className="cancel-button"
-              onClick={() => navigate('/')}
+              onClick={resetForm}
+              title="Clear the form"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
+                <path d="M3 6h18M3 12h18M3 18h18" />
               </svg>
-              Back to List
+              Cancel
             </button>
+
+            {/* Back to List moved to top-right */}
             <button
               type="submit"
               className="submit-button"
@@ -392,6 +248,11 @@ function AddStone() {
               )}
             </button>
           </div>
+          {success && (
+            <div className="snackbar" role="status">
+              {success}
+            </div>
+          )}
         </form>
       </div>
     </div>

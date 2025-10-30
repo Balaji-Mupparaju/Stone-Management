@@ -49,6 +49,9 @@ function FirstOne() {
   const openCard = (id) => {
     navigate(`/second/${id}`); // go to Second page
   };
+  const editCard = (id) => {
+    navigate(`/edit-stone/${id}`);
+  };
 
   return (
     <div className="page-container">
@@ -119,6 +122,12 @@ function FirstOne() {
                       onClick={() => openCard(stone._id)}
                     >
                       View Details
+                    </button>
+                    <button 
+                      className="card-button"
+                      onClick={() => editCard(stone._id)}
+                    >
+                      Edit
                     </button>
                     <button 
                       className="card-button delete-button"
