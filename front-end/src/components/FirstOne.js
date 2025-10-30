@@ -27,8 +27,8 @@ function FirstOne() {
     }
   };
 
-  const addCard = () => {
-    // This will be replaced with actual API call to add stone
+  const addCard = async () => {
+    navigate('/addStone');
     console.log('Add stone functionality - to be implemented');
   };
 
@@ -43,6 +43,10 @@ function FirstOne() {
   };
 
   const openCard = (id) => {
+    navigate(`/second/${id}`); // go to Second page
+  };
+
+  const editCard = (id) => {
     navigate(`/second/${id}`); // go to Second page
   };
 
@@ -105,7 +109,7 @@ function FirstOne() {
                   border: "1px solid #ccc",
                   borderRadius: "10px",
                   padding: "20px",
-                  width: "calc(33.33% - 20px)",
+                  width: "calc(25% - 20px)",
                   background: "#f9f9f9",
                   boxSizing: "border-box",
                   textAlign: "left",
@@ -150,6 +154,19 @@ function FirstOne() {
                     onClick={() => openCard(stone._id)}
                   >
                     Open
+                  </button>
+                                    <button 
+                    style={{ 
+                      padding: "8px 16px", 
+                      backgroundColor: "green", 
+                      color: "white", 
+                      border: "none", 
+                      borderRadius: "4px",
+                      cursor: "pointer"
+                    }} 
+                    onClick={() => editCard(stone._id)}
+                  >
+                    Edit
                   </button>
                   <button 
                     style={{ 
