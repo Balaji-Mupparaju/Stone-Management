@@ -1,18 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ApiService from '../services/api';
-import './FirstOne.css';
+// Legacy component-specific CSS replaced by global theme utilities
+import '../styles/theme.css';
 
 function FirstOne() {
   const [stones, setStones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [confirmStone, setConfirmStone] = useState(null); // stone object pending delete
   const navigate = useNavigate();
 
   // Fetch all stones from API on component mount
   useEffect(() => {
     fetchStones();
   }, []);
+
+  // ESC key to close modal
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'Escape' && confirmStone) {
+        setConfirmStone(null);
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [confirmStone]);
 
   const fetchStones = async () => {
     try {
@@ -36,13 +49,23 @@ function FirstOne() {
     navigate('/add-stone');
   };
 
-  const deleteCard = async (id) => {
+  const requestDelete = (id) => {
+    const target = stones.find(s => s._id === id);
+    setConfirmStone(target || null);
+  };
+
+  const cancelDelete = () => setConfirmStone(null);
+
+  const confirmDelete = async () => {
+    if (!confirmStone?._id) return;
     try {
-      await ApiService.deleteStone(id);
-      setStones(stones.filter(stone => stone._id !== id));
+      await ApiService.deleteStone(confirmStone._id);
+      setStones(prev => prev.filter(stone => stone._id !== confirmStone._id));
     } catch (err) {
       setError('Failed to delete stone');
       console.error('Error deleting stone:', err);
+    } finally {
+      setConfirmStone(null);
     }
   };
 
@@ -54,94 +77,64 @@ function FirstOne() {
   };
 
   return (
-    <div className="page-container">
-      <header className="header">
-        <div className="controls-container">
-          <button className="control-button add-button" onClick={addCard}>
-            <span>＋</span> Add Stone
-          </button>
-          <button className="control-button refresh-button" onClick={fetchStones}>
-            ↻ Refresh
-          </button>
+    <div className="inventory-view">
+      {error && (
+        <div className="card" style={{marginTop:'1rem', borderColor:'var(--color-danger)', background:'var(--color-danger-soft)', color:'var(--color-danger)'}}>
+          <strong style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
+            <span aria-hidden>⚠️</span> {error}
+          </strong>
         </div>
-      </header>
-
-      <div className="content-container">
-        {error && (
-          <div className="error-message">
-            <span>⚠️</span>
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="loading-message">
-            Loading your stone inventory...
-          </div>
-        ) : (
-          <div className="stones-container">
-            {stones.length === 0 ? (
-              <div className="no-stones-message">
-                No stones found in inventory. Add your first stone to get started!
-              </div>
-            ) : (
-              stones.map((stone) => (
-                <div key={stone._id} className="stone-card">
-                  <div className="stone-content">
-                    <h3 className="stone-title">
-                      {stone.stoneName || 'Unnamed Stone'}
-                    </h3>
-                    <div className="stone-info">
-                      <span>Status</span>
-                      <span className="stone-type-badge">{stone.status || 'N/A'}</span>
-                    </div>
-                    <div className="stone-info">
-                      <span>Bought From</span>
-                      <strong>{stone.boughtFrom || 'N/A'}</strong>
-                    </div>
-                    <div className="stone-info">
-                      <span>Estimated Feet</span>
-                      <strong>{stone.estimatedFeet || 0}</strong>
-                    </div>
-                    <div className="stone-info">
-                      <span>Stone Cost</span>
-                      <strong>₹{stone.stoneCost?.toLocaleString() || 0}</strong>
-                    </div>
-                    {stone.stoneTypes && stone.stoneTypes.length > 0 && (
-                      <div className="stone-info">
-                        <span>Types</span>
-                        <span className="stone-type-badge">
-                          {stone.stoneTypes.length} type(s)
-                        </span>
-                      </div>
-                    )}
+      )}
+      {loading ? (
+        <div className="flex-center" style={{padding:'4rem 0'}}>
+          <div className="text-muted">Loading your stone inventory…</div>
+        </div>
+      ) : (
+        <div className="grid" style={{gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', marginTop:'1rem'}}>
+          {stones.length === 0 ? (
+            <div className="card soft" style={{gridColumn:'1 / -1', textAlign:'center'}}>
+              <h3 className="heading" style={{marginBottom:'0.5rem'}}>No Stones Yet</h3>
+              <p className="text-muted" style={{marginBottom:'1rem'}}>Add your first stone to get started!</p>
+              <button className="btn btn-add" onClick={addCard}>Add Stone +</button>
+            </div>
+          ) : (
+            stones.map(stone => (
+              <div key={stone._id} className="card hoverable" aria-label={stone.stoneName}>
+                <div style={{display:'flex', flexDirection:'column', gap:'0.4rem'}}>
+                  <h3 style={{margin:0, fontSize:'1.1rem'}}>{stone.stoneName || 'Unnamed Stone'}</h3>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:'0.35rem'}}>
+                    <span className="badge primary" title="Status">{stone.status || 'N/A'}</span>
+                    {stone.stoneTypes?.length ? (
+                      <span className="badge soft" title="Types count">{stone.stoneTypes.length} type(s)</span>
+                    ) : null}
                   </div>
-                  <div className="card-buttons">
-                    <button 
-                      className="card-button open-button"
-                      onClick={() => openCard(stone._id)}
-                    >
-                      View Details
-                    </button>
-                    <button 
-                      className="card-button"
-                      onClick={() => editCard(stone._id)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="card-button delete-button"
-                      onClick={() => deleteCard(stone._id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                  <div className="text-muted text-xs">Bought From: <strong style={{color:'var(--color-text)'}}>{stone.boughtFrom || 'N/A'}</strong></div>
+                  <div className="text-muted text-xs">Estimated Feet: <strong style={{color:'var(--color-text)'}}>{stone.estimatedFeet || 0}</strong></div>
+                  <div className="text-muted text-xs">Stone Cost: <strong style={{color:'var(--color-text)'}}>₹{stone.stoneCost?.toLocaleString() || 0}</strong></div>
                 </div>
-              ))
-            )}
+                <div className="divider" />
+                <div style={{display:'flex', gap:'0.5rem', flexWrap:'wrap'}}>
+                  <button className="btn btn-outline" onClick={() => openCard(stone._id)}>View</button>
+                  <button className="btn btn-outline" onClick={() => editCard(stone._id)}>Edit</button>
+                  <button className="btn btn-danger-soft" onClick={() => requestDelete(stone._id)}>Delete</button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+      {confirmStone && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-label="Confirm delete">
+          <div className="modal-confirm">
+            <h4>Delete Stone</h4>
+            <p style={{margin:0,fontSize:'0.9rem'}}>Are you sure you want to delete <strong>{confirmStone.stoneName || 'this stone'}</strong>? <br></br>This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button className="btn btn-outline" onClick={cancelDelete}>Cancel</button>
+              <button className="btn btn-danger" onClick={confirmDelete}>Delete</button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

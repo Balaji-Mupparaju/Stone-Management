@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ApiService from '../services/api';
-import './AddStone.css';
+// Use global theme utilities instead of AddStone.css
+import '../styles/theme.css';
 
 function EditStone() {
   const { id } = useParams();
@@ -109,6 +110,13 @@ function EditStone() {
     try {
       setSaving(true);
       setError(null);
+      // Validation: no empty type allowed
+      const invalidTypeIndex = (formData.stoneTypes || []).findIndex(t => !t.type || t.type.trim() === '');
+      if (invalidTypeIndex !== -1) {
+        setError(`Please select a type for row ${invalidTypeIndex + 1} before saving.`);
+        setSaving(false);
+        return;
+      }
       const totalInvestment = (Number(formData.stoneCost || 0) + Number(formData.stoneTravelCost || 0)) || 0;
       const totalCuttingCost = (Number(formData.cuttingFeet || 0) * Number(formData.cuttingCostPerFeet || 0)) || 0;
       const totalPolishCost = (Number(formData.polishFeet || 0) * Number(formData.polishCostPerFeet || 0)) || 0;
@@ -178,47 +186,39 @@ function EditStone() {
   };
 
   if (loading) {
-    return (
-      <div className="add-stone-container">
-        <div className="add-stone-card"><h2>Loading…</h2></div>
-      </div>
-    );
+    return <div className="flex-center" style={{minHeight:'50vh'}}><div className="card"><h2 style={{margin:0}}>Loading…</h2></div></div>;
   }
 
+  const investment = (Number(formData.stoneCost||0) + Number(formData.stoneTravelCost||0)).toLocaleString();
+  const totalCutting = (Number(formData.cuttingFeet||0) * Number(formData.cuttingCostPerFeet||0)).toLocaleString();
+  const totalPolish = (Number(formData.polishFeet||0) * Number(formData.polishCostPerFeet||0)).toLocaleString();
+
   return (
-    <div className="add-stone-container">
-      <div className="add-stone-card">
-        <h2>Edit Stone</h2>
-        <div className="card-subtitle">Update stone core and cost details</div>
-        <button
-          type="button"
-          className="back-top-button"
-          onClick={() => navigate(-1)}
-          title="Back"
-          aria-label="Back"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-        </button>
-
-        {error && <div className="error-message">{error}</div>}
-
-        <form onSubmit={handleSave}>
-          {/* Header row: left Title + Date, right Status */}
-          <div className="edit-header-grid">
-            <div>
-              <div className={`form-group floating ${formData.stoneName ? 'has-value' : ''}`}>
-                <input type="text" name="stoneName" value={formData.stoneName} onChange={handleChange} required placeholder=" " />
-                <label className="floating-label">Stone Name *</label>
-              </div>
-              <div className={`form-group floating ${formData.date ? 'has-value' : ''}`}>
-                <input type="date" name="date" value={formData.date} onChange={handleChange} placeholder=" " />
-                <label className="floating-label">Date</label>
-              </div>
+    <div className="edit-stone-view" style={{maxWidth:'1100px', margin:'1rem auto'}}>
+      <div className="flex justify-between items-center" style={{marginBottom:'1.25rem', flexWrap:'wrap', gap:'0.75rem'}}>
+        <h1 style={{margin:0, fontSize:'1.4rem'}}>Edit Stone</h1>
+        <div className="flex gap-2">
+          <button type="button" className="btn btn-outline" onClick={() => navigate(-1)} aria-label="Go Back">← Back</button>
+          <button type="submit" form="editStoneForm" className="btn" disabled={saving || (formData.stoneTypes || []).some(t => !t.type || t.type.trim() === '')}>{saving ? 'Saving…' : 'Save'}</button>
+        </div>
+      </div>
+      {error && (
+        <div className="card" style={{borderColor:'var(--color-danger)', background:'var(--color-danger-soft)', color:'var(--color-danger)', marginBottom:'1rem'}} role="alert">{error}</div>
+      )}
+      <form id="editStoneForm" onSubmit={handleSave} className="grid" style={{gap:'1.25rem'}}>
+        {/* Primary Info */}
+        <div className="card" style={{display:'grid', gap:'1rem'}}>
+          <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:'1rem'}}>
+            <div className="field floating">
+              <input name="stoneName" value={formData.stoneName} onChange={handleChange} required placeholder=" " aria-required="true" />
+              <label>Stone Name *</label>
             </div>
-            <div className={`form-group select-group ${formData.status ? 'has-value' : ''}`}>
-              <select name="status" value={formData.status} onChange={handleChange} required>
+            <div className="field floating">
+              <input type="date" name="date" value={formData.date} onChange={handleChange} placeholder=" " />
+              <label>Date</label>
+            </div>
+            <div className="field floating">
+              <select name="status" value={formData.status} onChange={handleChange} required aria-required="true">
                 <option value="" disabled>Select status</option>
                 <option value="Fresh Stone">Fresh Stone</option>
                 <option value="Cutting">Cutting</option>
@@ -226,189 +226,146 @@ function EditStone() {
                 <option value="Unsold">Unsold</option>
                 <option value="Sold">Sold</option>
               </select>
-              <label className={`floating-label select-label`}>Status *</label>
+              <label>Status *</label>
+            </div>
+            <div className="field floating">
+              <input name="boughtFrom" value={formData.boughtFrom} onChange={handleChange} placeholder=" " />
+              <label>Bought From</label>
             </div>
           </div>
+        </div>
 
-          <div className="edit-fields-card">
-            <div className="edit-two-col">
-              <div>
-                <div className={`form-group floating ${formData.boughtFrom ? 'has-value' : ''}`}>
-                  <input type="text" name="boughtFrom" value={formData.boughtFrom} onChange={handleChange} placeholder=" " />
-                  <label className="floating-label">Bought From</label>
-                </div>
-                <div className={`form-group floating ${formData.stoneCost ? 'has-value' : ''}`}>
-                  <input type="number" name="stoneCost" value={formData.stoneCost} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Stone Cost (₹)</label>
-                </div>
-                <div className={`form-group floating ${formData.stoneTravelCost ? 'has-value' : ''}`}>
-                  <input type="number" name="stoneTravelCost" value={formData.stoneTravelCost} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Stone Travel Cost (₹)</label>
-                </div>
-              </div>
-              <div>
-                <div className={`form-group floating ${formData.estimatedFeet ? 'has-value' : ''}`}>
-                  <input type="number" name="estimatedFeet" value={formData.estimatedFeet} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Estimated Feet</label>
-                </div>
-                <div className="form-group">
-                  <input disabled value={`Total Investment: ₹${(Number(formData.stoneCost||0) + Number(formData.stoneTravelCost||0)).toLocaleString()}`} />
-                </div>
-              </div>
+        {/* Cost & Feet */}
+        <div className="card" style={{display:'grid', gap:'1rem'}}>
+          <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:'1rem'}}><div className="field floating">
+              <input type="number" name="stoneTravelCost" value={formData.stoneTravelCost} onChange={handleChange} min="0" placeholder=" " />
+              <label>Travel Cost (₹)</label>
+            </div>
+            <div className="field floating">
+              <input type="number" name="stoneCost" value={formData.stoneCost} onChange={handleChange} min="0" placeholder=" " />
+              <label>Stone Cost (₹)</label>
+            </div>
+            <div className="field floating">
+              <input type="number" name="estimatedFeet" value={formData.estimatedFeet} onChange={handleChange} min="0" placeholder=" " />
+              <label>Estimated Feet</label>
+            </div>
+            <div className="field floating">
+              <input disabled value={`Investment ₹${investment}`} aria-label={`Total Investment ₹${investment}`} />
+              <label>Total Investment</label>
             </div>
           </div>
+        </div>
 
-          {/* Cutting Card */}
-          <div className="edit-fields-card">
-            <div className="edit-two-col">
-              <div>
-                <div className={`form-group floating ${formData.cuttingFeet ? 'has-value' : ''}`}>
-                  <input type="number" name="cuttingFeet" value={formData.cuttingFeet} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Cutting Feet</label>
-                </div>
-                <div className={`form-group floating ${formData.cuttingCostPerFeet ? 'has-value' : ''}`}>
-                  <input type="number" name="cuttingCostPerFeet" value={formData.cuttingCostPerFeet} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Cutting Cost / ft (₹)</label>
-                </div>
-              </div>
-              <div>
-                <div className="form-group">
-                  <input disabled value={`Total Cutting: ₹${(Number(formData.cuttingFeet||0) * Number(formData.cuttingCostPerFeet||0)).toLocaleString()}`} />
-                </div>
-              </div>
+        {/* Cutting / Polishing */}
+        <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))', gap:'1.25rem'}}>
+          <div className="card" style={{display:'grid', gap:'0.75rem'}}>
+            <h3 style={{margin:'0 0 0.25rem 0', fontSize:'1rem'}}>Cutting</h3>
+            <div className="field floating">
+              <input type="number" name="cuttingFeet" value={formData.cuttingFeet} onChange={handleChange} min="0" placeholder=" " />
+              <label>Cutting Feet</label>
+            </div>
+            <div className="field floating">
+              <input type="number" name="cuttingCostPerFeet" value={formData.cuttingCostPerFeet} onChange={handleChange} min="0" placeholder=" " />
+              <label>Cost / ft (₹)</label>
+            </div>
+            <div className="field floating">
+              <input disabled value={`Total ₹${totalCutting}`} aria-label={`Total Cutting ₹${totalCutting}`} />
+              <label>Total Cutting</label>
             </div>
           </div>
-
-          {/* Polishing Card */}
-          <div className="edit-fields-card">
-            <div className="edit-two-col">
-              <div>
-                <div className={`form-group floating ${formData.polishFeet ? 'has-value' : ''}`}>
-                  <input type="number" name="polishFeet" value={formData.polishFeet} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Polishing Feet</label>
-                </div>
-                <div className={`form-group floating ${formData.polishCostPerFeet ? 'has-value' : ''}`}>
-                  <input type="number" name="polishCostPerFeet" value={formData.polishCostPerFeet} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Polishing Cost / ft (₹)</label>
-                </div>
-              </div>
-              <div>
-                <div className="form-group">
-                  <input disabled value={`Total Polishing: ₹${(Number(formData.polishFeet||0) * Number(formData.polishCostPerFeet||0)).toLocaleString()}`} />
-                </div>
-              </div>
+          <div className="card" style={{display:'grid', gap:'0.75rem'}}>
+            <h3 style={{margin:'0 0 0.25rem 0', fontSize:'1rem'}}>Polishing</h3>
+            <div className="field floating">
+              <input type="number" name="polishFeet" value={formData.polishFeet} onChange={handleChange} min="0" placeholder=" " />
+              <label>Polish Feet</label>
+            </div>
+            <div className="field floating">
+              <input type="number" name="polishCostPerFeet" value={formData.polishCostPerFeet} onChange={handleChange} min="0" placeholder=" " />
+              <label>Cost / ft (₹)</label>
+            </div>
+            <div className="field floating">
+              <input disabled value={`Total ₹${totalPolish}`} aria-label={`Total Polish ₹${totalPolish}`} />
+              <label>Total Polish</label>
             </div>
           </div>
+        </div>
 
-          {/* Final Details Card */}
-          <div className="edit-fields-card">
-            <div className="edit-two-col">
-              <div>
-                <div className={`form-group floating ${formData.markerName ? 'has-value' : ''}`}>
-                  <input type="text" name="markerName" value={formData.markerName} onChange={handleChange} placeholder=" " />
-                  <label className="floating-label">Marker Name</label>
-                </div>
-                <div className={`form-group floating ${formData.phoneNo ? 'has-value' : ''}`}>
-                  <input type="text" name="phoneNo" value={formData.phoneNo} onChange={handlePhoneChange} placeholder=" " maxLength="10" />
-                  <label className="floating-label">Phone Number (10 digits)</label>
-                </div>
-              </div>
-              <div>
-                <div className={`form-group floating ${formData.finalFeet ? 'has-value' : ''}`}>
-                  <input type="number" name="finalFeet" value={formData.finalFeet} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Final Feet</label>
-                </div>
-                <div className={`form-group floating ${formData.soldAmount ? 'has-value' : ''}`}>
-                  <input type="number" name="soldAmount" value={formData.soldAmount} onChange={handleChange} min="0" placeholder=" " />
-                  <label className="floating-label">Sold Amount (₹)</label>
-                </div>
-              </div>
+        {/* Sales & Summary */}
+        <div className="grid" style={{gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))', gap:'1.25rem'}}>
+          <div className="card" style={{display:'grid', gap:'0.75rem'}}>
+            <h3 style={{margin:'0 0 0.25rem 0', fontSize:'1rem'}}>Sales</h3>
+            <div className="field floating">
+              <input name="markerName" value={formData.markerName} onChange={handleChange} placeholder=" " />
+              <label>Marker Name</label>
+            </div>
+            <div className="field floating">
+              <input name="phoneNo" value={formData.phoneNo} onChange={handlePhoneChange} placeholder=" " maxLength={10} />
+              <label>Phone (10 digits)</label>
             </div>
           </div>
+          <div className="card" style={{display:'grid', gap:'0.75rem'}}>
+            <h3 style={{margin:'0 0 0.25rem 0', fontSize:'1rem'}}>Summary</h3>
+            <div className="field floating">
+              <input type="number" name="finalFeet" value={formData.finalFeet} onChange={handleChange} min="0" placeholder=" " />
+              <label>Final Feet</label>
+            </div>
+            <div className="field floating">
+              <input type="number" name="soldAmount" value={formData.soldAmount} onChange={handleChange} min="0" placeholder=" " />
+              <label>Sold Amount (₹)</label>
+            </div>
+          </div>
+        </div>
 
-          
-
-          {/* Stone Types Table */}
-          <div className="edit-fields-card">
-            <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1rem', fontWeight: 700 }}>Stone Types</h3>
-            <div className="stone-types-table">
-              <div className="stone-types-header">
-                <div className="st-col-type">Type</div>
-                <div className="st-col-feet">Feet</div>
-                <div className="st-col-estd">Estd Price</div>
-                <div className="st-col-sold">Sold Price</div>
-                <div className="st-col-action"></div>
+        {/* Stone Types */}
+        <div className="card" style={{display:'grid', gap:'0.75rem'}}>
+          <h3 style={{margin:'0 0 0.5rem 0', fontSize:'1rem'}}>Stone Types</h3>
+          <div className="table-scroll" role="region" aria-label="Stone types scroll area">
+            <div className="table-grid" role="table" aria-label="Stone types table">
+              <div className="table-head" role="row">
+                <div>Type</div>
+                <div>Feet</div>
+                <div>Estd Price</div>
+                <div>Sold Price</div>
+                <div></div>
               </div>
-              {(formData.stoneTypes || []).map((t, i) => (
-                <div key={i} className="stone-types-row">
-                  <div className="st-col-type">
+              {(formData.stoneTypes || []).map((t,i) => {
+                const isInvalid = !t.type || t.type.trim() === '';
+                return (
+                  <div key={i} className="table-row" role="row" style={isInvalid ? {borderColor:'var(--color-danger)', background:'var(--color-danger-soft)'} : undefined}>
                     <select
                       value={t.type}
-                      onChange={(e) => handleTypeChange(i, 'type', e.target.value)}
+                      aria-label={`Type row ${i+1}`}
+                      onChange={(e)=>handleTypeChange(i,'type',e.target.value)}
+                      className={`select-type${isInvalid ? ' invalid' : ''}`}
                     >
                       <option value="">Select</option>
-                      <option value="under size">under size</option>
-                      <option value="below">below</option>
-                      <option value="low commercial">low commercial</option>
-                      <option value="commercial">commercial</option>
-                      <option value="high/good">high/good</option>
-                      <option value="three feet">three feet</option>
-                      <option value="wrong cutting">wrong cutting</option>
-                      <option value="waste">waste</option>
+                      <option value="Under Size">Under Size</option>
+                      <option value="Below">Below</option>
+                      <option value="Low Commercial">Low Commercial</option>
+                      <option value="Commercial">Commercial</option>
+                      <option value="High/Good">High/Good</option>
+                      <option value="Three Feet">Three Feet</option>
+                      <option value="Wrong Cutting">Wrong Cutting</option>
+                      <option value="Waste">Waste</option>
                     </select>
+                    <input type="number" value={t.feet} min="0" aria-label={`Feet row ${i+1}`} onChange={(e)=>handleTypeChange(i,'feet',e.target.value)} />
+                    <input type="number" value={t.estCost} min="0" aria-label={`Estimated cost row ${i+1}`} onChange={(e)=>handleTypeChange(i,'estCost',e.target.value)} />
+                    <input type="number" value={t.soldCost} min="0" aria-label={`Sold cost row ${i+1}`} onChange={(e)=>handleTypeChange(i,'soldCost',e.target.value)} />
+                    <button type="button" className="btn btn-danger" style={{padding:'0.45rem 0.6rem'}} onClick={()=>removeTypeRow(i)} aria-label={`Remove type row ${i+1}`}>×</button>
                   </div>
-                  <div className="st-col-feet">
-                    <input
-                      type="number"
-                      value={t.feet}
-                      onChange={(e) => handleTypeChange(i, 'feet', e.target.value)}
-                      min="0"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="st-col-estd">
-                    <input
-                      type="number"
-                      value={t.estCost}
-                      onChange={(e) => handleTypeChange(i, 'estCost', e.target.value)}
-                      min="0"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="st-col-sold">
-                    <input
-                      type="number"
-                      value={t.soldCost}
-                      onChange={(e) => handleTypeChange(i, 'soldCost', e.target.value)}
-                      min="0"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="st-col-action">
-                    <button type="button" className="remove-type-button" onClick={() => removeTypeRow(i)} title="Remove">✕</button>
-                  </div>
-                </div>
-              ))}
-              <div className="stone-types-add">
-                <button type="button" className="add-type-button" onClick={addTypeRow}>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                  Add Row
-                </button>
-              </div>
+                )})}
             </div>
           </div>
-
-          <div className="form-actions">
-            <button type="button" className="cancel-button" onClick={() => navigate(-1)}>Cancel</button>
-            <button type="submit" className="submit-button" disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</button>
+          <div>
+            <button type="button" className="btn btn-outline" onClick={addTypeRow}>+ Add Row</button>
           </div>
-          {success && <div className="snackbar" role="status">{success}</div>}
-        </form>
-
-        
+        </div>
+      </form>
+      <div className="form-actions-sticky show-xs" role="toolbar" aria-label="Mobile edit actions">
+        <button type="button" className="btn btn-secondary" onClick={() => navigate(-1)}>Back</button>
+        <button type="submit" form="editStoneForm" className="btn btn-primary" disabled={saving || (formData.stoneTypes || []).some(t => !t.type || t.type.trim() === '')}>{saving ? 'Saving…' : 'Save'}</button>
       </div>
+      {success && <div className="toast" role="status">{success}</div>}
     </div>
   );
 }

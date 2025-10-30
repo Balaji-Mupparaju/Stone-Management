@@ -1,7 +1,11 @@
+import dotenv from 'dotenv';
 import app from './app.js';
 
-const PORT = process.env.PORT || 3000;
+// Load environment variables
+dotenv.config();
+
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`🚀 Server listening on port ${PORT} (env: ${process.env.NODE_ENV || 'development'})`);
 });

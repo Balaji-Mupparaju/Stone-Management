@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Offline – Stone Management</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin:0; padding:2rem; background:#111; color:#fff; display:flex; min-height:100vh; align-items:center; justify-content:center; }
+    .box { max-width:520px; background:#1e1e1e; padding:2rem; border-radius:16px; box-shadow:0 6px 24px -8px rgba(0,0,0,.5); }
+    h1 { margin-top:0; font-size:1.4rem; }
+    p { line-height:1.5; }
+    .tips { font-size:0.85rem; opacity:.75; margin-top:1rem; }
+    a { color:#4dabf7; }
+    button { background:#4dabf7; color:#000; border:none; padding:.65rem 1rem; border-radius:8px; font-weight:600; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>You're Offline</h1>
+    <p>The Stone Management app can't reach the network right now. Some cached pages may still be available, but dynamic data (like latest stone updates) needs a connection.</p>
+    <button onclick="location.reload()">Retry Connection</button>
+    <div class="tips">
+      <p>If the issue persists: check your network, or open any previously visited page. Data you viewed earlier may still be cached.</p>
+    </div>
+  </div>
+</body>
+</html>

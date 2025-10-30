@@ -34,15 +34,10 @@ class App {
   database() {
     const uri = process.env.MONGO_CONNECTION_STRING;
     if (!uri) {
-      console.error("❌ MONGO_CONNECTION_STRING is undefined. Check your .env file!");
+      console.error("❌ MONGO_CONNECTION_STRING is undefined. Create your .env from .env.example.");
       return;
     }
-  
-    mongoose
-      .connect(uri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      })
+    mongoose.connect(uri)
       .then(() => console.log("✅ Database connected successfully"))
       .catch((err) => console.error("❌ Database connection error:", err));
   }
